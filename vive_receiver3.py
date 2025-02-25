@@ -138,28 +138,32 @@ def display_3d(data):
     mesh_sphere.paint_uniform_color([0.1, 0.1, 0.7])
     vis.add_geometry(mesh_sphere)
 
-    for hand in ["left", "right"]:
-        if hand in data:
-            controller = data[hand]
-            if controller.get("tracked", False):
-                pos = controller.get("position", {})
-                rot = controller.get("rotation", {})
-                if pos and rot:
-                    # Set position
-                    mesh_sphere.translate([pos.get('x', 0), pos.get('y', 0), pos.get('z', 0)], relative=False)
-                    
-                    # Set orientation
-                    R = o3d.geometry.get_rotation_matrix_from_xyz(
-                        [np.radians(rot.get('roll', 0)), np.radians(rot.get('pitch', 0)), np.radians(rot.get('yaw', 0))]
-                    )
-                    mesh_sphere.rotate(R, center=mesh_sphere.get_center())
-                    
-                    vis.update_geometry(mesh_sphere)
-                    vis.poll_events()
-                    vis.update_renderer()
-                    time.sleep(0.1)
-
-    vis.destroy_window()
+    try:
+        while True:
+            for hand in ["left", "right"]:
+                if hand in data:
+                    controller = data[hand]
+                    if controller.get("tracked", False):
+                        pos = controller.get("position", {})
+                        rot = controller.get("rotation", {})
+                        if pos and rot:
+                            # Set position
+                            mesh_sphere.translate([pos.get('x', 0), pos.get('y', 0), pos.get('z', 0)], relative=False)
+                            
+                            # Set orientation
+                            R = o3d.geometry.get_rotation_matrix_from_xyz(
+                                [np.radians(rot.get('roll', 0)), np.radians(rot.get('pitch', 0)), np.radians(rot.get('yaw', 0))]
+                            )
+                            mesh_sphere.rotate(R, center=mesh_sphere.get_center())
+                            
+                            vis.update_geometry(mesh_sphere)
+                            vis.poll_events()
+                            vis.update_renderer()
+                            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\nExiting 3D visualization...")
+    finally:
+        vis.destroy_window()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Receive HTC Vive controller data")
