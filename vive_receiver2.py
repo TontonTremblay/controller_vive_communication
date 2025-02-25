@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import socket
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import json
 import argparse
 import time
@@ -35,6 +37,8 @@ def receive_controller_data(port=5555, display_mode="simple"):
                     display_simple(controller_data)
                 elif display_mode == "full":
                     display_full(controller_data)
+                elif display_mode == "3d":
+                    display_3d(controller_data)
                 elif display_mode == "raw":
                     print(json.dumps(controller_data, indent=2))
                 
@@ -126,7 +130,25 @@ def display_full(data):
             else:
                 print(f"\n{hand.upper()} CONTROLLER: Not tracked")
 
-if __name__ == "__main__":
+def display_3d(data):
+    """Display 3D visualization of controller position"""
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title("HTC Vive Controller 3D Position")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    for hand in ["left", "right"]:
+        if hand in data:
+            controller = data[hand]
+            if controller.get("tracked", False):
+                pos = controller.get("position", {})
+                if pos:
+                    ax.scatter(pos.get('x', 0), pos.get('y', 0), pos.get('z', 0), label=f"{hand.capitalize()} Controller")
+    
+    ax.legend()
+    plt.show()
     parser = argparse.ArgumentParser(description="Receive HTC Vive controller data")
     parser.add_argument("--port", type=int, default=5555, help="UDP port to listen on (default: 5555)")
     parser.add_argument("--mode", choices=["simple", "full", "raw"], default="simple", 
