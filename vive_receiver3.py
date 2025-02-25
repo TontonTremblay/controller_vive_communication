@@ -160,6 +160,8 @@ def display_3d(data):
                     time.sleep(0.1)
 
     vis.destroy_window()
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Receive HTC Vive controller data")
     parser.add_argument("--port", type=int, default=5555, help="UDP port to listen on (default: 5555)")
     parser.add_argument("--mode", choices=["simple", "full", "raw", "3d"], default="simple", 
