@@ -5,6 +5,7 @@ import argparse
 import time
 
 def receive_controller_data(port=5555, display_mode="simple"):
+    
     """Receive and display controller data from the Windows machine"""
     # Create UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -100,7 +101,7 @@ def display_full(data):
                 # Rotation
                 rot = controller.get("rotation", {})
                 if rot:
-                    print(f"  Rotation: Roll={rot.get('roll', 0):.1f}°, Pitch={rot.get('pitch', 0):.1f}°, Yaw={rot.get('yaw', 0):.1f}°")
+                    print(f"  Rotation: Roll={rot.get('roll', 0):.1f}Â°, Pitch={rot.get('pitch', 0):.1f}Â°, Yaw={rot.get('yaw', 0):.1f}Â°")
                 
                 # All buttons
                 buttons = controller.get("buttons", {})
