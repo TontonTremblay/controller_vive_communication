@@ -24,6 +24,12 @@ def receive_controller_data(port=5555, display_mode="simple"):
         mesh_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
         mesh_sphere.paint_uniform_color([0.1, 0.1, 0.7])
         vis.add_geometry(mesh_sphere)
+        # Set initial view to look at the sphere
+        ctr = vis.get_view_control()
+        ctr.set_lookat([0, 0, 0])
+        ctr.set_front([0, 0, -1])
+        ctr.set_up([0, -1, 0])
+        ctr.set_zoom(0.5)
 
 
     try:
