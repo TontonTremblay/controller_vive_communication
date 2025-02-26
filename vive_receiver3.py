@@ -8,8 +8,10 @@ import time
 
 mesh_sphere = None
 vis = None
+position_history = []
+
 def receive_controller_data(port=5555, display_mode="simple"):
-    global mesh_sphere, vis
+    global mesh_sphere, vis, position_history
     """Receive and display controller data from the Windows machine"""
     # Create UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -63,6 +65,10 @@ def receive_controller_data(port=5555, display_mode="simple"):
             except json.JSONDecodeError:
                 print(f"Received invalid data from {addr}")
             
+            # Update position history every second
+            if display_mode == "3d":
+                time.sleep(1)
+            
     except KeyboardInterrupt:
         print("\nExiting...")
     finally:
@@ -70,7 +76,24 @@ def receive_controller_data(port=5555, display_mode="simple"):
 
 def display_simple(data):
     """Display simplified controller data"""
+    global mesh_sphere, vis, position_history
+
     for hand in ["left", "right"]:
+        if hand in data:
+            controller = data[hand]
+            if controller.get("tracked", False):
+                pos = controller.get("position", {})
+                rot = controller.get("rotation", {})
+                if pos and rot:
+                    # Add position to history
+                    position_history.append([pos.get('x', 0), pos.get('y', 0), pos.get('z', 0)])
+                    
+                    # Create small spheres for each position in history
+                    for position in position_history:
+                        history_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=0.02)
+                        history_sphere.paint_uniform_color([0.7, 0.1, 0.1])
+                        history_sphere.translate(position, relative=False)
+                        vis.add_geometry(history_sphere)
         if hand in data:
             controller = data[hand]
             if controller.get("tracked", False):
