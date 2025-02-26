@@ -168,6 +168,10 @@ def display_3d(data):
                     )
                     mesh_sphere.rotate(R, center=mesh_sphere.get_center())
                     
+                    # Update camera to track the sphere
+                    ctr = vis.get_view_control()
+                    ctr.set_lookat([pos.get('x', 0), pos.get('y', 0), pos.get('z', 0)])
+                    
                     vis.update_geometry(mesh_sphere)
                     vis.poll_events()
                     vis.update_renderer()
