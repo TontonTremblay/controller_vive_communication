@@ -46,6 +46,22 @@ def get_button_names():
         openvr.k_EButton_SteamVR_Trigger: "Trigger"
     }
 
+def find_controllers(vr_system):
+    """Find and identify the controllers"""
+    controllers = {"left": None, "right": None}
+    
+    for i in range(openvr.k_unMaxTrackedDeviceCount):
+        device_class = vr_system.getTrackedDeviceClass(i)
+        if device_class == openvr.TrackedDeviceClass_Controller:
+            # Get controller role
+            role = vr_system.getControllerRoleForTrackedDeviceIndex(i)
+            if role == openvr.TrackedControllerRole_LeftHand:
+                controllers["left"] = i
+            elif role == openvr.TrackedControllerRole_RightHand:
+                controllers["right"] = i
+    
+    return controllers
+
 def get_controller_info(target_ip=None, target_port=None):
     """Initialize OpenVR and get information about the HTC Vive controllers."""
     try:
@@ -69,22 +85,15 @@ def get_controller_info(target_ip=None, target_port=None):
         button_names = get_button_names()
         
         # Dictionary to store controller indices
-        controllers = {"left": None, "right": None}
-        
-        # First, identify the controllers
-        for i in range(openvr.k_unMaxTrackedDeviceCount):
-            device_class = vr_system.getTrackedDeviceClass(i)
-            if device_class == openvr.TrackedDeviceClass_Controller:
-                # Get controller role
-                role = vr_system.getControllerRoleForTrackedDeviceIndex(i)
-                if role == openvr.TrackedControllerRole_LeftHand:
-                    controllers["left"] = i
-                elif role == openvr.TrackedControllerRole_RightHand:
-                    controllers["right"] = i
+        controllers = find_controllers(vr_system)
         
         print(f"Found controllers: Left: {'Yes' if controllers['left'] is not None else 'No'}, "
               f"Right: {'Yes' if controllers['right'] is not None else 'No'}")
         print("-----------------------------------")
+        
+        # Time tracking for controller reconnection
+        last_controller_check = time.time()
+        controller_check_interval = 2.0  # Check for controllers every 2 seconds
         
         try:
             while True:
@@ -93,6 +102,22 @@ def get_controller_info(target_ip=None, target_port=None):
                     _ = system('cls')
                 else:
                     _ = system('clear')
+                
+                # Periodically check for controllers (to handle sleep/wake cycles)
+                current_time = time.time()
+                if current_time - last_controller_check > controller_check_interval:
+                    new_controllers = find_controllers(vr_system)
+                    
+                    # Update controller indices if new ones are found
+                    if controllers["left"] is None and new_controllers["left"] is not None:
+                        controllers["left"] = new_controllers["left"]
+                        print("Left controller reconnected!")
+                    
+                    if controllers["right"] is None and new_controllers["right"] is not None:
+                        controllers["right"] = new_controllers["right"]
+                        print("Right controller reconnected!")
+                    
+                    last_controller_check = current_time
                 
                 print("\n=== HTC Vive Controller Tracker ===")
                 print(f"Time: {time.strftime('%H:%M:%S')}")
@@ -234,6 +259,11 @@ def get_controller_info(target_ip=None, target_port=None):
                             print(f"\n  Tracking: {'OK' if pose.bDeviceIsConnected else 'Not Connected'}")
                         else:
                             print(f"\n{hand.upper()} CONTROLLER: Not tracked")
+                            # If the controller is not tracked, check if it's still connected
+                            if not pose.bDeviceIsConnected:
+                                # Controller might be disconnected or asleep, mark for rediscovery
+                                controllers[hand] = None
+                                print(f"  {hand.upper()} controller disconnected or asleep. Will try to reconnect.")
                     else:
                         print(f"\n{hand.upper()} CONTROLLER: Not detected")
                 
@@ -423,7 +453,7 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Track and send HTC Vive controller data")
-    parser.add_argument("--ip", type=str, help="IP address of the target Linux machine")
+    parser.add_argument("--ip", type=str, default='127.0.0.1', help="IP address of the target machine (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=5555, help="UDP port on the target machine (default: 5555)")
     parser.add_argument("--create-receiver", action="store_true", help="Create a receiver script for the Linux machine")
     args = parser.parse_args()

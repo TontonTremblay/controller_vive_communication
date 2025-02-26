@@ -10,6 +10,9 @@ A Python application for tracking and streaming HTC Vive controller data over a 
 - Streams controller data over UDP to another computer
 - Low-latency data transmission suitable for real-time applications
 - Cross-platform compatibility (sender on Windows, receiver on any platform)
+- 3D visualization of controller positions and movements
+- Motion trails to track controller movement paths
+- Visual feedback when controller triggers are pressed
 
 ## Requirements
 
@@ -20,9 +23,10 @@ A Python application for tracking and streaming HTC Vive controller data over a 
 - OpenVR Python package
 - NumPy
 
-### Receiver (Any platform)
+### Receiver/Visualizer (Any platform)
 - Python 3.6+
-- Standard library only (no additional dependencies)
+- Matplotlib (for 3D visualization)
+- NumPy
 
 ## Installation
 
@@ -32,7 +36,7 @@ A Python application for tracking and streaming HTC Vive controller data over a 
    cd controller_vive_communication
    ```
 
-2. Install the required packages on the sender machine:
+2. Install the required packages:
    ```
    pip install -r requirements.txt
    ```
@@ -69,7 +73,32 @@ A Python application for tracking and streaming HTC Vive controller data over a 
    - `--port`: UDP port to listen on (default: 5555)
    - `--mode`: Display mode - simple, full, or raw (default: simple)
 
-## Display Modes
+### Visualizer (Any platform)
+
+1. Run the visualizer script:
+   ```
+   python vive_matplotlib_visualizer.py
+   ```
+
+2. Optional arguments:
+   ```
+   python vive_matplotlib_visualizer.py --port 5555 --trail-length 100
+   ```
+   - `--port`: UDP port to listen on (default: 5555)
+   - `--trail-length`: Number of points to keep in the motion trail (default: 50)
+
+## Visualization Features
+
+The matplotlib-based visualizer provides:
+
+- 3D view of controller positions in real-time
+- Color-coded controllers (blue for left, red for right)
+- Controllers turn green when triggers are pressed
+- Motion trails showing the path of each controller
+- Coordinate frames showing controller orientation
+- Ground plane grid for spatial reference
+
+## Display Modes (Text Receiver)
 
 - **simple**: Shows essential information (position and main button states)
 - **full**: Shows all available data (position, rotation, all buttons, analog inputs)
@@ -104,6 +133,13 @@ The controller data is sent as JSON with the following structure:
   "timestamp": 1234567890.123
 }
 ```
+
+## Handling Controller Sleep
+
+The system automatically handles controller sleep/wake cycles:
+- When controllers go to sleep to save battery, they are marked as disconnected
+- When they wake up (by pressing any button), they are automatically reconnected
+- No need to restart the application when controllers go to sleep
 
 ## License
 

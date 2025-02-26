@@ -1,3 +1,4 @@
-openvr>=2.0.0
-numpy>=1.19.0
+openvr==1.23.701
+numpy>=1.20.0
+matplotlib>=3.3.0
 setuptools>=44.0.0 
